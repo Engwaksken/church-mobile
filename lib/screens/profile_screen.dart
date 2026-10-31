@@ -42,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _uploading = false;
 
   Future<Map<String, dynamic>> _load() async {
-    final session = context.read<Session>();
+    final session = context.watch<Session>();
     final data = await session.api.get('me');
     session.updateMember(Map<String, dynamic>.from(data['member'] as Map? ?? {}));
     return data;
@@ -105,7 +105,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final rows = {
             ('Membership No', Icons.badge_outlined): m['member_no'],
             ('Pledge No', Icons.handshake_outlined): m['pledge_no'],
-            ('Church zone', Icons.map_outlined): m['church_zone'],
             ('Service attended', Icons.church_outlined): m['service_attended'],
             ('Phone', Icons.phone_outlined): m['phone'],
             ('Email', Icons.email_outlined): m['email'],
@@ -167,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Church of Uganda member',
+                        session.siteSubtitle,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white.withValues(alpha: .85)),
                       ),
@@ -200,7 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         key: const Key('editProfile'),
                         leading: const IconBadge(Icons.edit_outlined, size: 40),
                         title: const Text('Edit profile'),
-                        subtitle: const Text('Phone, email, church zone and service'),
+                        subtitle: const Text('Phone, email and service'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: _editProfile,
                       ),

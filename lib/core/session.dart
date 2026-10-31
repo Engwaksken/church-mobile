@@ -38,12 +38,25 @@ class Session extends ChangeNotifier {
 
   SessionStatus status = SessionStatus.loading;
   Map<String, dynamic> member = const {};
+  String siteSubtitle = '';
 
   /// Shown on the sign-in screen after the server ends the session.
   String? notice;
 
   /// Called each time a member is signed in or a saved sign-in is restored (used to register for push).
   void Function()? onSignedIn;
+
+  /// Loads the church subtitle configured in the website's site settings.
+  Future<void> loadBranding() async {
+    try {
+      final data = await api.get('branding');
+      final church = Map<String, dynamic>.from(data['church'] as Map? ?? {});
+      siteSubtitle = (church['subtitle'] as String?)?.trim() ?? '';
+      notifyListeners();
+    } on ApiException catch (e) {
+      debugPrint('Could not load church branding: ${e.message}');
+    }
+  }
 
   /// Restores a saved sign-in, checking with the server that it is still valid.
   Future<void> restore() async {

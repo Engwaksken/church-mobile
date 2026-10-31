@@ -6,7 +6,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Release signing key details, kept out of git (android/key.properties and android/app/stpaulskyebando-release.jks).
+// Release signing key details are kept out of git (android/key.properties and the release keystore).
 val keystoreProperties = Properties().apply {
     val file = rootProject.file("key.properties")
     if (file.exists()) file.inputStream().use { load(it) }
@@ -18,7 +18,7 @@ if (file("google-services.json").exists()) {
 }
 
 android {
-    namespace = "stpaulskyebando.app"
+    namespace = "org.pentecostal.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "stpaulskyebando.app"
+        applicationId = "org.pentecostal.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

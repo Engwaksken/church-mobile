@@ -39,7 +39,7 @@ class AuthLayout extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .25), blurRadius: 24, offset: const Offset(0, 8))],
                       ),
-                      child: Image.asset('assets/icons/logo.png', width: logo, height: logo, cacheHeight: (logo * 3).round(), semanticLabel: 'Church of Uganda logo'),
+                      child: Image.asset('assets/icons/logo.png', width: logo, height: logo, cacheHeight: (logo * 3).round(), semanticLabel: 'Church logo'),
                     ),
                     SizedBox(height: compact ? 12 : 16),
                     Text(

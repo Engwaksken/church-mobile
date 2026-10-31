@@ -5,8 +5,8 @@
 class AppConfig {
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://church.kemmytech.com/api/member/',
+    defaultValue: 'https://pentacostal.kemmytech.com/api/member/',
   );
 
-  static const String appName = 'St Paul Kyebando';
+  static const String appName = 'Pentecostal Church';
 }

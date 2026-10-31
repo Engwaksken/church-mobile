@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:st_paul_kyebando/core/api_client.dart';
-import 'package:st_paul_kyebando/core/push.dart';
-import 'package:st_paul_kyebando/core/session.dart';
-import 'package:st_paul_kyebando/main.dart';
+import 'package:pentecostal_app/core/api_client.dart';
+import 'package:pentecostal_app/core/push.dart';
+import 'package:pentecostal_app/core/session.dart';
+import 'package:pentecostal_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -65,7 +65,7 @@ http.Response fakeApi(http.Request request, {bool expireToken = false}) {
     return json(401, {'success': false, 'message': 'Your session has expired. Please sign in again.'});
   }
   return switch (action) {
-    'me' => json(200, {'success': true, 'member': member, 'church': {'name': 'St Paul Kyebando'}}),
+    'me' => json(200, {'success': true, 'member': member, 'church': {'name': 'Pentecostal Church'}}),
     'dashboard' => json(200, {
         'success': true,
         'member': member,
@@ -117,19 +117,13 @@ http.Response fakeApi(http.Request request, {bool expireToken = false}) {
             ],
           })
         : json(200, {'success': true, 'type': request.url.queryParameters['type'], 'total': 0.0, 'items': <Object>[]}),
-    'zones' => json(200, {
-        'success': true,
-        'items': [
-          {'id': 3, 'name': 'Central Zone'},
-        ],
-      }),
     'update_profile' => () {
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         updatedProfiles.add(body);
         return json(200, {
           'success': true,
           'message': 'Your profile was updated.',
-          'member': {...member, 'phone': body['phone'], 'church_zone_id': body['church_zone_id'], 'church_zone': 'Central Zone'},
+          'member': {...member, 'phone': body['phone'], 'email': body['email'], 'service_attended': body['service_attended']},
         });
       }(),
     _ => json(404, {'success': false, 'message': 'Unknown action.'}),
@@ -266,7 +260,7 @@ void main() {
     expect(find.text('Contributions'), findsOneWidget);
   });
 
-  testWidgets('edits phone and church zone from the profile', (tester) async {
+  testWidgets('edits phone and email from the profile without zone data', (tester) async {
     updatedProfiles.clear();
     final session = makeSession(savedToken: validToken);
     await session.restore();
@@ -285,15 +279,12 @@ void main() {
     expect(find.text('Enter a valid phone number.'), findsOneWidget);
 
     await tester.enterText(find.byKey(const Key('phone')), '0772 123456');
-    await tester.tap(find.text('Not set'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Central Zone').last);
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('saveProfile')));
     await tester.pumpAndSettle();
 
     expect(updatedProfiles.single['phone'], '0772 123456');
-    expect(updatedProfiles.single['church_zone_id'], 3);
+    expect(updatedProfiles.single.containsKey('church_zone_id'), isFalse);
+    expect(find.text('Church zone'), findsNothing);
     expect(find.text('My Profile'), findsOneWidget);
   });
 

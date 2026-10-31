@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final notice = context.watch<Session>().notice;
     return AuthLayout(
       title: AppConfig.appName,
-      subtitle: 'Church of Uganda',
+      subtitle: context.watch<Session>().siteSubtitle,
       child: Form(
         key: _formKey,
         child: Column(

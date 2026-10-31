@@ -2,8 +2,8 @@
 // Skipped unless a URL is given, for example:
 //   flutter test test/live_api_test.dart --dart-define=LIVE_API_URL=http://127.0.0.1:8767/api/member/ \
 //     --dart-define=LIVE_MEMBER_NO=RCOU-2026-0001 --dart-define=LIVE_PLEDGE_NO=P-001 --dart-define=LIVE_PASSWORD=...
-import 'package:st_paul_kyebando/core/api_client.dart';
-import 'package:st_paul_kyebando/core/session.dart';
+import 'package:pentecostal_app/core/api_client.dart';
+import 'package:pentecostal_app/core/session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'app_test.dart' show MemoryTokenStore;

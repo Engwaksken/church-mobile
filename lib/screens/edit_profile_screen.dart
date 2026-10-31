@@ -6,7 +6,7 @@ import '../core/format.dart';
 import '../core/session.dart';
 import 'login_screen.dart' show FormAlert;
 
-/// Edit contact details and church zone, with the same rules as the member website.
+/// Edit contact details and service attendance.
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -19,8 +19,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _phone;
   late final TextEditingController _email;
   late final TextEditingController _service;
-  int? _zoneId;
-  List<Map<String, dynamic>> _zones = const [];
   bool _busy = false;
   String? _error;
 
@@ -31,18 +29,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phone = TextEditingController(text: asText(m['phone']));
     _email = TextEditingController(text: asText(m['email']));
     _service = TextEditingController(text: asText(m['service_attended']));
-    _zoneId = int.tryParse(asText(m['church_zone_id']));
-    _loadZones();
-  }
-
-  Future<void> _loadZones() async {
-    try {
-      final data = await context.read<Session>().api.get('zones');
-      if (!mounted) return;
-      setState(() => _zones = List<Map<String, dynamic>>.from(data['items'] as List? ?? []));
-    } on ApiException {
-      // The zone list is optional; the member can still save their other details.
-    }
   }
 
   @override
@@ -65,7 +51,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'phone': _phone.text.trim(),
         'email': _email.text.trim(),
         'service_attended': _service.text.trim(),
-        'church_zone_id': _zoneId ?? 0,
       });
       session.updateMember(Map<String, dynamic>.from(data['member'] as Map? ?? {}));
       if (!mounted) return;
@@ -80,8 +65,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Until the zone list loads (or if the member's zone is missing from it), show "Not set" rather than an invalid value.
-    final zoneValue = _zones.any((z) => z['id'] == _zoneId) ? _zoneId : null;
     return Scaffold(
       appBar: AppBar(title: const Text('Edit profile')),
       body: Form(
@@ -120,18 +103,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 if (value.isNotEmpty && !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) return 'Enter a valid email address.';
                 return null;
               },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int?>(
-              key: ValueKey('zone-${_zones.length}'),
-              initialValue: zoneValue,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Church zone', prefixIcon: Icon(Icons.map_outlined)),
-              items: [
-                const DropdownMenuItem<int?>(value: null, child: Text('Not set')),
-                for (final z in _zones) DropdownMenuItem<int?>(value: z['id'] as int, child: Text(asText(z['name']))),
-              ],
-              onChanged: (v) => setState(() => _zoneId = v),
             ),
             const SizedBox(height: 16),
             TextFormField(

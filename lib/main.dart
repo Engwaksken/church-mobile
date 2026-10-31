@@ -18,6 +18,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final api = ApiClient(baseUrl: AppConfig.apiBaseUrl);
   final session = Session(api: api, store: SecureTokenStore())..onSignedIn = () => Push.start(api);
+  session.loadBranding();
   Push.onOpened = () => _navigator.currentState?.push(MaterialPageRoute<void>(builder: (_) => const NotificationsScreen()));
   Push.onForeground = (title, body) => _messenger.currentState?.showSnackBar(SnackBar(
         content: Text(body.isEmpty ? title : '$title\n$body'),
@@ -61,7 +62,7 @@ class _Root extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/icons/logo.png', height: 96, cacheHeight: 288, semanticLabel: 'Church of Uganda logo'),
+                Image.asset('assets/icons/logo.png', height: 96, cacheHeight: 288, semanticLabel: 'Church logo'),
                 const SizedBox(height: 28),
                 const CircularProgressIndicator(),
               ],

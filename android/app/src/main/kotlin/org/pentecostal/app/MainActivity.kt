@@ -1,4 +1,4 @@
-package stpaulskyebando.app
+package org.pentecostal.app
 
 import io.flutter.embedding.android.FlutterActivity
 
