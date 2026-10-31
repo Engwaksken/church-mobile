@@ -65,7 +65,7 @@ http.Response fakeApi(http.Request request, {bool expireToken = false}) {
     return json(401, {'success': false, 'message': 'Your session has expired. Please sign in again.'});
   }
   return switch (action) {
-    'me' => json(200, {'success': true, 'member': member, 'church': {'name': 'Rongoro COU'}}),
+    'me' => json(200, {'success': true, 'member': member, 'church': {'name': 'St Paul Kyebando'}}),
     'dashboard' => json(200, {
         'success': true,
         'member': member,
