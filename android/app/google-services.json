@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "844281394113",
-    "project_id": "st-paul-church-f0075",
-    "storage_bucket": "st-paul-church-f0075.firebasestorage.app"
+    "project_number": "869296321086",
+    "project_id": "pentecostal-edc5c",
+    "storage_bucket": "pentecostal-edc5c.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:844281394113:android:f42af5e6c4100fb5c23540",
+        "mobilesdk_app_id": "1:869296321086:android:f28a4fc283ab2eef5a176f",
         "android_client_info": {
-          "package_name": "stpaulskyebando.app"
+          "package_name": "org.pentecostal.app"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDJyCrvgdQmpD9DtBFWFe1Vg--7cS00-Fw"
+          "current_key": "AIzaSyBOPxTDbsczU4lKbQ7TdkqD5Xx4pbeWhe4"
         }
       ],
       "services": {
