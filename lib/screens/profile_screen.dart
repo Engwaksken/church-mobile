@@ -11,6 +11,7 @@ import '../widgets/ui.dart';
 import 'edit_profile_screen.dart';
 import 'home_shell.dart';
 import 'notification_settings_screen.dart';
+import 'notifications_screen.dart';
 import 'login_screen.dart' show FormAlert;
 
 /// Asks before signing out of the app on this device.
@@ -19,10 +20,18 @@ Future<void> confirmSignOut(BuildContext context, Session session) async {
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('Sign out?'),
-      content: const Text('You will need your membership or pledge number and password to sign in again.'),
+      content: const Text(
+        'You will need your membership or pledge number and password to sign in again.',
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign out')),
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Sign out'),
+        ),
       ],
     ),
   );
@@ -44,12 +53,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<Map<String, dynamic>> _load() async {
     final session = context.watch<Session>();
     final data = await session.api.get('me');
-    session.updateMember(Map<String, dynamic>.from(data['member'] as Map? ?? {}));
+    session.updateMember(
+      Map<String, dynamic>.from(data['member'] as Map? ?? {}),
+    );
     return data;
   }
 
   Future<void> _editProfile() async {
-    final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+    );
     if (saved == true) _view.currentState?.reload();
   }
 
@@ -60,8 +74,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(leading: const Icon(Icons.photo_camera_outlined), title: const Text('Take a photo'), onTap: () => Navigator.pop(context, ImageSource.camera)),
-            ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Choose from gallery'), onTap: () => Navigator.pop(context, ImageSource.gallery)),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
           ],
         ),
       ),
@@ -72,18 +94,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final session = context.read<Session>();
     try {
       // Resized on the phone so uploads stay well under the server's 5 MB limit.
-      final file = await ImagePicker().pickImage(source: source, maxWidth: 1080, maxHeight: 1080, imageQuality: 85);
+      final file = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
       if (file == null) return;
       setState(() => _uploading = true);
-      final data = await session.api.upload('update_photo', 'photo', await file.readAsBytes(), file.name);
-      session.updateMember(Map<String, dynamic>.from(data['member'] as Map? ?? {}));
-      messenger.showSnackBar(SnackBar(content: Text(asText(data['message'], 'Photo updated.'))));
+      final data = await session.api.upload(
+        'update_photo',
+        'photo',
+        await file.readAsBytes(),
+        file.name,
+      );
+      session.updateMember(
+        Map<String, dynamic>.from(data['member'] as Map? ?? {}),
+      );
+      messenger.showSnackBar(
+        SnackBar(content: Text(asText(data['message'], 'Photo updated.'))),
+      );
       _view.currentState?.reload();
     } on ApiException catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       debugPrint('Photo upload failed: $e');
-      messenger.showSnackBar(const SnackBar(content: Text('Could not use that photo. Please try another.')));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Could not use that photo. Please try another.'),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -93,7 +133,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final session = context.read<Session>();
     return Scaffold(
-      appBar: AppBar(leading: const MenuButton(), title: const Text('My Profile')),
+      appBar: const BrandAppBar(
+        leading: MenuButton(),
+        title: 'My Profile',
+        actions: [NotificationBell()],
+      ),
       body: RemoteView(
         key: _view,
         load: _load,
@@ -109,12 +153,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ('Phone', Icons.phone_outlined): m['phone'],
             ('Email', Icons.email_outlined): m['email'],
             ('Department', Icons.groups_outlined): m['department'],
-            ('Joined', Icons.event_available_outlined): asText(m['joined_date']).isEmpty ? null : formatDate(m['joined_date']),
+            (
+              'Joined',
+              Icons.event_available_outlined,
+            ): asText(m['joined_date']).isEmpty
+                ? null
+                : formatDate(m['joined_date']),
           }..removeWhere((_, v) => asText(v).isEmpty);
           // A short page, built in full rather than lazily.
           return SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+            padding: const EdgeInsets.fromLTRB(AppSpace.page, AppSpace.page, AppSpace.page, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -125,18 +174,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: const BoxDecoration(color: AppColors.gold, shape: BoxShape.circle),
-                            child: CircleAvatar(
-                              radius: 46,
-                              backgroundColor: Colors.white,
-                              foregroundImage: photo.isEmpty ? null : NetworkImage(photo),
-                              child: Text(
-                                name.substring(0, 1).toUpperCase(),
-                                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppColors.purple),
-                              ),
-                            ),
+                          BrandAvatar(
+                            name: name,
+                            photoUrl: photo,
+                            radius: 46,
                           ),
                           Positioned(
                             right: -8,
@@ -146,13 +187,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               tooltip: 'Change photo',
                               style: IconButton.styleFrom(
                                 backgroundColor: Colors.white,
-                                foregroundColor: AppColors.purple,
+                                foregroundColor: scheme.primary,
                                 disabledBackgroundColor: Colors.white,
-                                side: const BorderSide(color: AppColors.purple, width: 2),
+                                side: BorderSide(
+                                  color: scheme.primary,
+                                  width: 2,
+                                ),
                               ),
                               onPressed: _uploading ? null : _changePhoto,
                               icon: _uploading
-                                  ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: scheme.primary))
+                                  ? SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: scheme.primary,
+                                      ),
+                                    )
                                   : const Icon(Icons.photo_camera, size: 20),
                             ),
                           ),
@@ -162,14 +213,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(
                         name,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        session.siteSubtitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white.withValues(alpha: .85)),
-                      ),
+                      if (session.branding.subtitle.isNotEmpty)
+                        Opacity(
+                          opacity: .85,
+                          child: Text(
+                            session.branding.subtitle,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -179,7 +236,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Column(
-                        children: [for (final e in rows.entries) DetailRow(icon: e.key.$2, label: e.key.$1, value: asText(e.value))],
+                        children: [
+                          for (final e in rows.entries)
+                            DetailRow(
+                              icon: e.key.$2,
+                              label: e.key.$1,
+                              value: asText(e.value),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -188,7 +252,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
                   child: Text(
                     'To correct your name, membership number or department, please contact the church office.',
-                    style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
                 const SectionTitle('Account'),
@@ -208,16 +275,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         leading: const IconBadge(Icons.lock_reset, size: 40),
                         title: const Text('Change password'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChangePasswordScreen(),
+                          ),
+                        ),
                       ),
                       const Divider(indent: 16, endIndent: 16),
                       ListTile(
                         key: const Key('openNotificationSettings'),
-                        leading: const IconBadge(Icons.notifications_outlined, size: 40),
+                        leading: const IconBadge(
+                          Icons.notifications_outlined,
+                          size: 40,
+                        ),
                         title: const Text('Notification settings'),
                         subtitle: const Text('Push, email and SMS'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationSettingsScreen())),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationSettingsScreen(),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -226,7 +306,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: scheme.error,
-                    side: BorderSide(color: scheme.error.withValues(alpha: .4), width: 1.4),
+                    side: BorderSide(
+                      color: scheme.error.withValues(alpha: .4),
+                      width: 1.4,
+                    ),
                   ),
                   icon: const Icon(Icons.logout),
                   label: const Text('Sign out'),
@@ -287,7 +370,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         'confirm_password': _confirm.text,
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(asText(data['message'], 'Password changed.'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(asText(data['message'], 'Password changed.'))),
+      );
       Navigator.pop(context);
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
@@ -305,12 +390,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            if (_error != null) FormAlert(text: _error!, color: Theme.of(context).colorScheme.errorContainer, icon: Icons.error_outline),
+            if (_error != null)
+              FormAlert(
+                text: _error!,
+                color: Theme.of(context).colorScheme.errorContainer,
+                icon: Icons.error_outline,
+              ),
             TextFormField(
               controller: _current,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Current password', prefixIcon: Icon(Icons.lock_outline)),
-              validator: (v) => (v ?? '').isEmpty ? 'Enter your current password.' : null,
+              decoration: const InputDecoration(
+                labelText: 'Current password',
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
+              validator: (v) =>
+                  (v ?? '').isEmpty ? 'Enter your current password.' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -318,7 +412,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'New password',
-                helperText: 'At least 8 characters, with upper and lower case letters and a number.',
+                helperText:
+                    'At least 8 characters, with upper and lower case letters and a number.',
                 prefixIcon: Icon(Icons.lock_reset),
               ),
               validator: validateNewPassword,
@@ -327,16 +422,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             TextFormField(
               controller: _confirm,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Confirm new password', prefixIcon: Icon(Icons.lock_reset)),
-              validator: (v) => v != _new.text ? 'The passwords do not match.' : null,
+              decoration: const InputDecoration(
+                labelText: 'Confirm new password',
+                prefixIcon: Icon(Icons.lock_reset),
+              ),
+              validator: (v) =>
+                  v != _new.text ? 'The passwords do not match.' : null,
             ),
             const SizedBox(height: 24),
-            FilledButton(onPressed: _busy ? null : _submit, child: Text(_busy ? 'Saving…' : 'Change password')),
+            FilledButton(
+              onPressed: _busy ? null : _submit,
+              child: Text(_busy ? 'Saving…' : 'Change password'),
+            ),
             const SizedBox(height: 16),
             Text(
               'Your new password also applies to the church member website. Other devices will be signed out.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
           ],
         ),

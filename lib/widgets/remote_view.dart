@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api_client.dart';
+import 'ui.dart' show SkeletonList;
 
 /// Loads data from the API and shows it, with a spinner, an error with Retry, and pull-to-refresh.
 /// [builder] must return a scrollable widget (for example a ListView) so pull-to-refresh works.
@@ -48,7 +49,7 @@ class RemoteViewState extends State<RemoteView> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const SkeletonList();
     if (_data == null) {
       return MessageView(
         icon: Icons.cloud_off_outlined,
@@ -105,21 +106,44 @@ class MessageView extends StatelessWidget {
   }
 }
 
-/// Heading above a group of cards, with an optional action on the right.
+/// Heading above a group of cards: a small accent mark, the title, and an optional action on the right.
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.text, {super.key, this.trailing});
+  const SectionTitle(this.text, {super.key, this.trailing, this.actionLabel, this.onAction});
 
   final String text;
   final Widget? trailing;
 
+  /// Shortcut for a compact "See all" style link; ignored when [trailing] is given.
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final action = trailing ??
+        (actionLabel == null
+            ? null
+            : TextButton(
+                onPressed: onAction,
+                style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10), visualDensity: VisualDensity.compact),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [Text(actionLabel!), const SizedBox(width: 2), const Icon(Icons.chevron_right, size: 18)],
+                ),
+              ));
     return Padding(
-      padding: EdgeInsets.fromLTRB(4, 22, 0, trailing == null ? 8 : 2),
+      padding: EdgeInsets.fromLTRB(2, 22, 0, action == null ? 10 : 4),
       child: Row(
         children: [
-          Expanded(child: Text(text, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700))),
-          ?trailing,
+          Container(width: 4, height: 18, decoration: BoxDecoration(color: scheme.secondary, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(text, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          ?action,
         ],
       ),
     );

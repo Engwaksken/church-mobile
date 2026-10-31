@@ -7,8 +7,9 @@ import '../core/theme.dart';
 import '../widgets/remote_view.dart';
 import '../widgets/ui.dart';
 import 'home_shell.dart';
+import 'notifications_screen.dart';
 
-/// Order of Service and Church of Uganda hymns.
+/// Service program and songs.
 class WorshipScreen extends StatelessWidget {
   const WorshipScreen({super.key, this.initialTab = 0});
 
@@ -21,10 +22,11 @@ class WorshipScreen extends StatelessWidget {
       length: 2,
       initialIndex: initialTab.clamp(0, 2 - 1),
       child: Scaffold(
-        appBar: AppBar(
-          leading: const MenuButton(),
-          title: const Text('Worship'),
-          bottom: const TabBar(tabs: [Tab(text: 'Order of Service'), Tab(text: 'Hymns')]),
+        appBar: const BrandAppBar(
+          leading: MenuButton(),
+          title: 'Worship',
+          actions: [NotificationBell()],
+          tabs: ['Service Program', 'Songs'],
         ),
         body: const TabBarView(children: [OrderOfServiceView(), HymnsView()]),
       ),
@@ -52,10 +54,11 @@ class _OrderOfServiceViewState extends State<OrderOfServiceView> {
       builder: (context, data) {
         final orders = List<Map<String, dynamic>>.from(data['orders'] as List? ?? []);
         final order = data['order'] == null ? null : Map<String, dynamic>.from(data['order'] as Map);
-        if (order == null) return const MessageView(icon: Icons.format_list_numbered, message: 'No order of service has been published yet.');
+        if (order == null) return const MessageView(icon: Icons.format_list_numbered, message: 'No service program has been published yet.');
         final items = List<Map<String, dynamic>>.from(order['items'] as List? ?? []);
+        final scheme = Theme.of(context).colorScheme;
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.page),
           children: [
             if (orders.length > 1)
               DropdownButtonFormField<int>(
@@ -72,45 +75,50 @@ class _OrderOfServiceViewState extends State<OrderOfServiceView> {
                 },
               ),
             if (orders.length > 1) const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const IconBadge(Icons.church_outlined),
-                        const SizedBox(width: 14),
-                        Expanded(child: Text(asText(order['title']), style: Theme.of(context).textTheme.titleLarge)),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      [formatDate(order['service_date'], 'EEEE, d MMM y'), formatTime(order['service_time']), asText(order['service_type'])].where((s) => s.isNotEmpty).join(' · '),
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-                    ),
-                    if (asText(order['notes']).isNotEmpty) ...[
-                      const SizedBox(height: 12),
+            BrandPanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
                       Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: AppColors.goldSoft, borderRadius: BorderRadius.circular(12)),
-                        child: Text(asText(order['notes']), style: const TextStyle(color: AppColors.goldText)),
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(14)),
+                        child: Icon(Icons.church_outlined, color: scheme.secondary),
                       ),
+                      const SizedBox(width: 14),
+                      Expanded(child: Text(asText(order['title']), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.25))),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  Opacity(
+                    opacity: .88,
+                    child: Text(
+                      [formatDate(order['service_date'], 'EEEE, d MMM y'), formatTime(order['service_time']), asText(order['service_type'])].where((s) => s.isNotEmpty).join(' · '),
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  if (asText(order['notes']).isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: AppTones.soft(scheme.secondary), borderRadius: BorderRadius.circular(12)),
+                      child: Text(asText(order['notes']), style: TextStyle(color: AppTones.deep(scheme.secondary))),
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SectionTitle('Running order'),
             if (items.isEmpty) const EmptyNote(icon: Icons.hourglass_empty, text: 'The items for this service have not been added yet.'),
             for (final (i, item) in items.indexed)
               Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppColors.purple,
-                    foregroundColor: Colors.white,
+                    backgroundColor: scheme.primary,
+                    foregroundColor: AppTones.on(scheme.primary),
                     child: Text('${i + 1}', style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                   title: Text(asText(item['item_title'])),
@@ -154,20 +162,20 @@ class _HymnsViewState extends State<HymnsView> {
       load: () => api.get('hymns'),
       builder: (context, data) {
         final all = List<Map<String, dynamic>>.from(data['items'] as List? ?? []);
-        if (all.isEmpty) return const MessageView(icon: Icons.music_note_outlined, message: 'No hymns have been published yet.');
+        if (all.isEmpty) return const MessageView(icon: Icons.music_note_outlined, message: 'No songs have been published yet.');
         final q = _query.toLowerCase();
         final items = q.isEmpty
             ? all
             : all.where((h) => [h['hymn_number'], h['title'], h['author'], h['hymn_book'], h['theme']].any((v) => asText(v).toLowerCase().contains(q))).toList();
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.page),
           children: [
             TextField(
               decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search by number, title or author'),
               onChanged: (v) => setState(() => _query = v.trim()),
             ),
-            const SizedBox(height: 8),
-            if (items.isEmpty) const EmptyNote(icon: Icons.search_off, text: 'No hymns match your search.'),
+            const SizedBox(height: 10),
+            if (items.isEmpty) const EmptyNote(icon: Icons.search_off, text: 'No songs match your search.'),
             for (final h in items)
               Card(
                 child: ListTile(
@@ -176,7 +184,7 @@ class _HymnsViewState extends State<HymnsView> {
                     height: 48,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .6), borderRadius: BorderRadius.circular(14)),
-                    child: Text(asText(h['hymn_number'], '♪'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.purple)),
+                    child: Text(asText(h['hymn_number'], '♪'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)),
                   ),
                   title: Text(asText(h['title'])),
                   subtitle: Text([asText(h['hymn_book']), asText(h['language']), asText(h['theme'])].where((s) => s.isNotEmpty).join(' · ')),
@@ -201,13 +209,13 @@ class HymnScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final api = context.read<Session>().api;
     return Scaffold(
-      appBar: AppBar(title: const Text('Hymn')),
+      appBar: AppBar(title: const Text('Song')),
       body: RemoteView(
         load: () => api.get('hymn', {'id': '$hymnId'}),
         builder: (context, data) {
           final h = Map<String, dynamic>.from(data['hymn'] as Map);
           final details = {
-            'Hymn book': h['hymn_book'],
+            'Song book': h['hymn_book'],
             'Language': h['language'],
             'Author / Translator': h['author'],
             'Tune / Metre': h['tune'],
@@ -228,7 +236,7 @@ class HymnScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(16)),
-                        child: Text('#${h['hymn_number']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.gold)),
+                        child: Text('#${h['hymn_number']}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.secondary)),
                       ),
                       const SizedBox(width: 14),
                     ],

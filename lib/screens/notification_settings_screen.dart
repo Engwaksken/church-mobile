@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../core/api_client.dart';
 import '../core/format.dart';
 import '../core/session.dart';
-import '../core/theme.dart';
 import '../widgets/remote_view.dart';
 import '../widgets/ui.dart';
 import 'notifications_screen.dart' show notificationIcon;
@@ -29,7 +28,14 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   Map<String, Map<String, bool>>? _settings;
 
   Future<Map<String, dynamic>> _load() async {
-    final data = await context.read<Session>().api.get('notification_settings');
+    final Map<String, dynamic> data;
+    try {
+      data = await context.read<Session>().api.get('notification_settings');
+    } on ApiException catch (e) {
+      // Older church servers don't offer notification settings yet.
+      if (e.message.toLowerCase().contains('unknown action')) return {'unavailable': true};
+      rethrow;
+    }
     _settings = {
       for (final c in List<Map<String, dynamic>>.from(data['categories'] as List? ?? []))
         asText(c['key']): {for (final (ch, _, _) in _channels) ch: c[ch] == true},
@@ -55,10 +61,16 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Notification settings')),
+      appBar: const BrandAppBar(title: 'Notification settings', subtitle: ''),
       body: RemoteView(
         load: _load,
         builder: (context, data) {
+          if (data['unavailable'] == true) {
+            return const MessageView(
+              icon: Icons.notifications_off_outlined,
+              message: "Notification settings aren't available from the church server yet. Please check again after the next update.",
+            );
+          }
           final categories = List<Map<String, dynamic>>.from(data['categories'] as List? ?? []);
           final channels = Map<String, dynamic>.from(data['channels'] as Map? ?? {});
           bool available(String ch) => (channels[ch] as Map?)?['available'] == true;
@@ -67,7 +79,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               if (asText((channels[ch] as Map?)?['note']).isNotEmpty) (icon, label, asText((channels[ch] as Map?)?['note']), available(ch)),
           ];
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
               Text(
                 'Choose how the church reaches you for each kind of message. Changes are saved straight away.',
@@ -83,7 +95,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         for (final (icon, label, note, ok) in notes)
                           ListTile(
                             dense: true,
-                            leading: Icon(icon, color: ok ? AppColors.purple : scheme.onSurfaceVariant),
+                            leading: Icon(icon, color: ok ? scheme.primary : scheme.onSurfaceVariant),
                             title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
                             subtitle: Text(note),
                           ),

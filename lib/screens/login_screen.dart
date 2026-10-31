@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final notice = context.watch<Session>().notice;
     return AuthLayout(
       title: AppConfig.appName,
-      subtitle: context.watch<Session>().siteSubtitle,
+      subtitle: context.watch<Session>().branding.subtitle,
       child: Form(
         key: _formKey,
         child: Column(
@@ -62,10 +62,19 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Text('Welcome', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
-            Text('Sign in with your membership or pledge number.', style: TextStyle(color: scheme.onSurfaceVariant)),
+            Text(
+              'Sign in with your membership or pledge number.',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
             const SizedBox(height: 20),
-            if (notice != null && _error == null) FormAlert(text: notice, color: scheme.secondaryContainer),
-            if (_error != null) FormAlert(text: _error!, color: scheme.errorContainer, icon: Icons.error_outline),
+            if (notice != null && _error == null)
+              FormAlert(text: notice, color: scheme.secondaryContainer),
+            if (_error != null)
+              FormAlert(
+                text: _error!,
+                color: scheme.errorContainer,
+                icon: Icons.error_outline,
+              ),
             TextFormField(
               key: const Key('identifier'),
               controller: _identifier,
@@ -77,7 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintText: 'e.g. RCOU-2026-0001 or P-001',
                 prefixIcon: Icon(Icons.badge_outlined),
               ),
-              validator: (v) => (v ?? '').trim().isEmpty ? 'Enter your membership or pledge number.' : null,
+              validator: (v) => (v ?? '').trim().isEmpty
+                  ? 'Enter your membership or pledge number.'
+                  : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -91,11 +102,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
                   tooltip: _showPassword ? 'Hide password' : 'Show password',
-                  icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                  onPressed: () => setState(() => _showPassword = !_showPassword),
+                  icon: Icon(
+                    _showPassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  onPressed: () =>
+                      setState(() => _showPassword = !_showPassword),
                 ),
               ),
-              validator: (v) => (v ?? '').isEmpty ? 'Enter your password.' : null,
+              validator: (v) =>
+                  (v ?? '').isEmpty ? 'Enter your password.' : null,
             ),
             Align(
               alignment: Alignment.centerRight,
@@ -104,8 +121,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: _busy
                     ? null
                     : () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(builder: (_) => ForgotPasswordScreen(identifier: _identifier.text)),
+                        MaterialPageRoute<void>(
+                          builder: (_) => ForgotPasswordScreen(
+                            identifier: _identifier.text,
+                          ),
                         ),
+                      ),
                 child: const Text('Forgot password?'),
               ),
             ),
@@ -114,7 +135,14 @@ class _LoginScreenState extends State<LoginScreen> {
               key: const Key('signIn'),
               onPressed: _busy ? null : _submit,
               child: _busy
-                  ? SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: scheme.primary))
+                  ? SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: scheme.primary,
+                      ),
+                    )
                   : const Text('Sign in'),
             ),
             const SizedBox(height: 20),
@@ -132,7 +160,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
 /// Coloured message box above a form.
 class FormAlert extends StatelessWidget {
-  const FormAlert({super.key, required this.text, required this.color, this.icon = Icons.info_outline});
+  const FormAlert({
+    super.key,
+    required this.text,
+    required this.color,
+    this.icon = Icons.info_outline,
+  });
 
   final String text;
   final Color color;
@@ -143,13 +176,21 @@ class FormAlert extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 14.5, height: 1.35))),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14.5, height: 1.35),
+            ),
+          ),
         ],
       ),
     );

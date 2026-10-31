@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'api_client.dart';
+import 'branding.dart';
 
 /// Where the sign-in token is kept between app launches.
 abstract class TokenStore {
@@ -38,7 +39,7 @@ class Session extends ChangeNotifier {
 
   SessionStatus status = SessionStatus.loading;
   Map<String, dynamic> member = const {};
-  String siteSubtitle = '';
+  ChurchBranding branding = const ChurchBranding();
 
   /// Shown on the sign-in screen after the server ends the session.
   String? notice;
@@ -51,7 +52,7 @@ class Session extends ChangeNotifier {
     try {
       final data = await api.get('branding');
       final church = Map<String, dynamic>.from(data['church'] as Map? ?? {});
-      siteSubtitle = (church['subtitle'] as String?)?.trim() ?? '';
+      branding = ChurchBranding.fromJson(church);
       notifyListeners();
     } on ApiException catch (e) {
       debugPrint('Could not load church branding: ${e.message}');

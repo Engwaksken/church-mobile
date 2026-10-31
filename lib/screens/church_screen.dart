@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../core/format.dart';
 import '../core/session.dart';
+import '../core/theme.dart';
 import '../widgets/remote_view.dart';
 import '../widgets/ui.dart';
 import 'home_shell.dart';
+import 'notifications_screen.dart';
 
 /// Church news: announcements, upcoming programs, and Health/Education department tips.
 class ChurchScreen extends StatelessWidget {
@@ -20,14 +22,12 @@ class ChurchScreen extends StatelessWidget {
       length: 4,
       initialIndex: initialTab.clamp(0, 4 - 1),
       child: Scaffold(
-        appBar: AppBar(
-          leading: const MenuButton(),
-          title: const Text('Church'),
-          bottom: const TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [Tab(text: 'Announcements'), Tab(text: 'Programs'), Tab(text: 'Health Tips'), Tab(text: 'Education Tips')],
-          ),
+        appBar: const BrandAppBar(
+          leading: MenuButton(),
+          title: 'Church',
+          actions: [NotificationBell()],
+          tabs: ['Announcements', 'Programs', 'Health Tips', 'Education Tips'],
+          scrollableTabs: true,
         ),
         body: const TabBarView(
           children: [_AnnouncementsTab(), _ProgramsTab(), _TipsTab(dept: 'health'), _TipsTab(dept: 'education')],
@@ -49,7 +49,7 @@ class _AnnouncementsTab extends StatelessWidget {
         final items = List<Map<String, dynamic>>.from(data['items'] as List? ?? []);
         if (items.isEmpty) return const MessageView(icon: Icons.notifications_none, message: 'No announcements right now.');
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.page),
           children: [
             for (final a in items)
               _ArticleCard(
@@ -78,7 +78,7 @@ class _ProgramsTab extends StatelessWidget {
         final items = List<Map<String, dynamic>>.from(data['items'] as List? ?? []);
         if (items.isEmpty) return const MessageView(icon: Icons.event_busy, message: 'No upcoming programs.');
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.page),
           children: [
             for (final p in items)
               _ArticleCard(
@@ -114,7 +114,7 @@ class _TipsTab extends StatelessWidget {
         final department = asText(data['department']);
         if (items.isEmpty) return MessageView(icon: Icons.lightbulb_outline, message: 'No $department tips have been published yet.');
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.page),
           children: [
             for (final t in items)
               _ArticleCard(
@@ -167,10 +167,16 @@ class _ArticleCard extends StatelessWidget {
               ],
             ),
             if (body.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              const Divider(),
-              const SizedBox(height: 12),
-              Text(body, style: const TextStyle(height: 1.5, fontSize: 15)),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: .035),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(body, style: const TextStyle(height: 1.5, fontSize: 15)),
+              ),
             ],
           ],
         ),

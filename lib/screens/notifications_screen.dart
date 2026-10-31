@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/api_client.dart';
+
 import '../core/format.dart';
 import '../core/push.dart';
 import '../core/session.dart';
@@ -42,7 +44,14 @@ class NotificationsScreen extends StatelessWidget {
       ),
       body: RemoteView(
         load: () async {
-          final data = await api.get('notifications');
+          final Map<String, dynamic> data;
+          try {
+            data = await api.get('notifications');
+          } on ApiException catch (e) {
+            // Older church servers don't offer notifications yet: show the empty state instead of an error.
+            if (e.message.toLowerCase().contains('unknown action')) return const {'items': []};
+            rethrow;
+          }
           if (((data['unread'] as num?) ?? 0) > 0) {
             try {
               await api.post('mark_notifications_read', const {});

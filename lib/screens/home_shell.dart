@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../core/format.dart';
 import '../core/session.dart';
 import '../core/theme.dart';
+import '../widgets/brand_nav_bar.dart';
+import '../widgets/ui.dart';
 import 'church_screen.dart';
 import 'dashboard_screen.dart';
 import 'edit_profile_screen.dart';
@@ -24,7 +26,7 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMixin {
   final _scaffold = GlobalKey<ScaffoldState>();
   int _index = 0;
   final _visited = <int>{0};
@@ -33,19 +35,29 @@ class _HomeShellState extends State<HomeShell> {
   final _initialTabs = <int, int>{};
   final _versions = <int, int>{};
 
+  /// Bottom bar destinations; the index is the section number used by [_open]. Worship (2) is the raised center button.
   static const _destinations = [
-    NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-    NavigationDestination(icon: Icon(Icons.volunteer_activism_outlined), selectedIcon: Icon(Icons.volunteer_activism), label: 'Giving'),
-    NavigationDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: 'Worship'),
-    NavigationDestination(icon: Icon(Icons.campaign_outlined), selectedIcon: Icon(Icons.campaign), label: 'Church'),
-    NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+    BrandNavItem(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: 'Home'),
+    BrandNavItem(icon: Icons.volunteer_activism_outlined, selectedIcon: Icons.volunteer_activism, label: 'Giving'),
+    BrandNavItem(icon: Icons.menu_book_outlined, selectedIcon: Icons.menu_book, label: 'Worship'),
+    BrandNavItem(icon: Icons.campaign_outlined, selectedIcon: Icons.campaign, label: 'Church'),
+    BrandNavItem(icon: Icons.person_outline, selectedIcon: Icons.person, label: 'Profile'),
   ];
+
+  /// Fades the page in when the tab changes.
+  late final _fade = AnimationController(vsync: this, duration: const Duration(milliseconds: 220), value: 1);
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
 
   Widget _page(int i) {
     final key = ValueKey('$i-${_versions[i] ?? 0}');
     final tab = _initialTabs[i] ?? 0;
     return switch (i) {
-      0 => DashboardScreen(key: key, onOpenTab: _select),
+      0 => DashboardScreen(key: key, onOpenTab: _open),
       1 => GivingScreen(key: key, initialTab: tab),
       2 => WorshipScreen(key: key, initialTab: tab),
       3 => ChurchScreen(key: key, initialTab: tab),
@@ -53,14 +65,18 @@ class _HomeShellState extends State<HomeShell> {
     };
   }
 
-  void _select(int i) => setState(() {
-        _index = i;
-        _visited.add(i);
-      });
+  void _select(int i) {
+    if (i != _index) _fade.forward(from: 0);
+    setState(() {
+      _index = i;
+      _visited.add(i);
+    });
+  }
 
   /// Closes the menu and shows section [i], on inner [tab] when given.
   void _open(int i, [int? tab]) {
     _scaffold.currentState?.closeDrawer();
+    if (i != _index) _fade.forward(from: 0);
     setState(() {
       if (tab != null && (_initialTabs[i] ?? 0) != tab) {
         _initialTabs[i] = tab;
@@ -79,16 +95,23 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffold,
-      drawer: _Menu(open: _open, run: _run, selected: _index),
-      body: IndexedStack(
-        index: _index,
-        children: [for (var i = 0; i < _destinations.length; i++) _visited.contains(i) ? _page(i) : const SizedBox.shrink()],
-      ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.outline))),
-        child: NavigationBar(selectedIndex: _index, onDestinationSelected: _select, destinations: _destinations),
+    // Android back from another tab returns to Home before leaving the app.
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _select(0);
+      },
+      child: Scaffold(
+        key: _scaffold,
+        drawer: _Menu(open: _open, run: _run, selected: _index),
+        body: FadeTransition(
+          opacity: CurvedAnimation(parent: _fade, curve: Curves.easeOut),
+          child: IndexedStack(
+            index: _index,
+            children: [for (var i = 0; i < _destinations.length; i++) _visited.contains(i) ? _page(i) : const SizedBox.shrink()],
+          ),
+        ),
+        bottomNavigationBar: BrandNavBar(items: _destinations, selectedIndex: _index, onSelected: _select, centerIndex: 2),
       ),
     );
   }
@@ -117,6 +140,7 @@ class _Menu extends StatelessWidget {
     final name = asText(m['full_name'], 'Member');
     final photo = asText(m['photo_url']);
     final scheme = Theme.of(context).colorScheme;
+    final onBrand = AppTones.on(scheme.primary);
 
     Widget tile(Widget child) => Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1), child: child);
     Widget item(IconData icon, String label, int section, [int? tab]) => tile(ListTile(
@@ -137,25 +161,16 @@ class _Menu extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           Container(
-            decoration: const BoxDecoration(gradient: AppColors.brandGradient),
+            decoration: BoxDecoration(gradient: AppTones.brand(scheme.primary)),
             padding: EdgeInsets.fromLTRB(20, MediaQuery.paddingOf(context).top + 24, 20, 22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(color: AppColors.gold, shape: BoxShape.circle),
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    foregroundImage: photo.isEmpty ? null : NetworkImage(photo),
-                    child: Text(name.substring(0, 1).toUpperCase(), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.purple)),
-                  ),
-                ),
+                BrandAvatar(name: name, photoUrl: photo),
                 const SizedBox(height: 14),
-                Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
+                Text(name, style: TextStyle(color: onBrand, fontWeight: FontWeight.w700, fontSize: 18)),
                 const SizedBox(height: 2),
-                Text('Member No. ${asText(m['member_no'])}', style: TextStyle(color: Colors.white.withValues(alpha: .85), fontSize: 13.5)),
+                Text('Member No. ${asText(m['member_no'])}', style: TextStyle(color: onBrand.withValues(alpha: .85), fontSize: 13.5)),
               ],
             ),
           ),
@@ -164,8 +179,8 @@ class _Menu extends StatelessWidget {
           heading('Giving'),
           for (final (i, t) in GivingScreen.tabs.indexed) item(t.icon, t.label, 1, i),
           heading('Worship'),
-          item(Icons.list_alt_outlined, 'Order of Service', 2, 0),
-          item(Icons.library_music_outlined, 'Hymns', 2, 1),
+          item(Icons.list_alt_outlined, 'Service Program', 2, 0),
+          item(Icons.library_music_outlined, 'Songs', 2, 1),
           heading('Church'),
           item(Icons.campaign_outlined, 'Announcements', 3, 0),
           item(Icons.event_outlined, 'Programs', 3, 1),
