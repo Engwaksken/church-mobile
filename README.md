@@ -1,4 +1,4 @@
-# COU Member App
+# St Paul Kyebando App
 
 Flutter app for church members. Members sign in with their **membership number or pledge number**
 and the same password they use on the church member website.
@@ -39,7 +39,7 @@ on every device. Members with no phone or email on file still need the church of
    weekend pledge reminders, so remove the old `cron/weekly_pledge_reminders.php` job from the crontab. Each run sends up to 200
    queued notifications. Emails use the website's SMTP settings; SMS uses the active `sms_settings` row.
 3. Push notifications (Firebase Cloud Messaging):
-   - Create a Firebase project, add an Android app with package `org.rongorocou.cou_member_app`, download
+   - Create a Firebase project, add an Android app with package `stpaulskyebando.app`, download
      `google-services.json` to `android/app/` and rebuild the app. Without that file the app builds as normal with push off.
    - In Firebase, Project settings > Service accounts > Generate new private key, and upload it to the website as
      `config/firebase-service-account.json` (kept out of git). Without it, push shows as "not switched on" in the app.
@@ -50,7 +50,7 @@ Sign-in tokens last 90 days; deactivating a member or their login ends app acces
 ## Development
 ```
 flutter pub get
-flutter run                                   # uses https://cou.kemmytech.com/api/member/
+flutter run                                   # uses https://church.kemmytech.com/api/member/
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/member/   # local server from the Android emulator
 flutter analyze
 flutter test                                  # widget tests (the live API test is skipped)
@@ -63,7 +63,7 @@ flutter test test/live_api_test.dart --dart-define=LIVE_API_URL=http://127.0.0.1
 ```
 
 ## Releasing
-- Android package / iOS bundle id: `org.rongorocou.cou_member_app` (change in `android/app/build.gradle.kts`
+- Android package / iOS bundle id: `stpaulskyebando.app` (change in `android/app/build.gradle.kts`
   and the Xcode project before the first store upload if you prefer another id).
 - Release builds are still signed with the debug key; set up a release keystore before uploading to Google Play.
 - Replace the default Flutter launcher icon.

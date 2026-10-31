@@ -1,4 +1,4 @@
-package org.rongorocou.cou_member_app
+package stpaulskyebando.app
 
 import io.flutter.embedding.android.FlutterActivity
 

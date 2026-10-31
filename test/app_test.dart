@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:cou_member_app/core/api_client.dart';
-import 'package:cou_member_app/core/push.dart';
-import 'package:cou_member_app/core/session.dart';
-import 'package:cou_member_app/main.dart';
+import 'package:st_paul_kyebando/core/api_client.dart';
+import 'package:st_paul_kyebando/core/push.dart';
+import 'package:st_paul_kyebando/core/session.dart';
+import 'package:st_paul_kyebando/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
