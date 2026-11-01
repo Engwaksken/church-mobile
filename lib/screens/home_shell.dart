@@ -181,7 +181,7 @@ class _Menu extends StatelessWidget {
           )),
           heading('Worship'),
           item(Icons.list_alt_outlined, 'Order of Service', 2, 0),
-          item(Icons.library_music_outlined, 'Hymns', 2, 1),
+          item(Icons.library_music_outlined, 'Church Songs', 2, 1),
           heading('Church'),
           item(Icons.campaign_outlined, 'Announcements', 3, 0),
           item(Icons.event_outlined, 'Programs', 3, 1),

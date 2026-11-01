@@ -8,7 +8,7 @@ import '../widgets/remote_view.dart';
 import '../widgets/ui.dart';
 import 'home_shell.dart';
 
-/// Order of Service and Church of Uganda hymns.
+/// Order of Service and Church Songs.
 class WorshipScreen extends StatelessWidget {
   const WorshipScreen({super.key, this.initialTab = 0});
 
@@ -24,7 +24,7 @@ class WorshipScreen extends StatelessWidget {
         appBar: AppBar(
           leading: const MenuButton(),
           title: const Text('Worship'),
-          bottom: const TabBar(tabs: [Tab(text: 'Order of Service'), Tab(text: 'Hymns')]),
+          bottom: const TabBar(tabs: [Tab(text: 'Order of Service'), Tab(text: 'Church Songs')]),
         ),
         body: const TabBarView(children: [OrderOfServiceView(), HymnsView()]),
       ),
@@ -154,7 +154,7 @@ class _HymnsViewState extends State<HymnsView> {
       load: () => api.get('hymns'),
       builder: (context, data) {
         final all = List<Map<String, dynamic>>.from(data['items'] as List? ?? []);
-        if (all.isEmpty) return const MessageView(icon: Icons.music_note_outlined, message: 'No hymns have been published yet.');
+        if (all.isEmpty) return const MessageView(icon: Icons.music_note_outlined, message: 'No songs have been published yet.');
         final q = _query.toLowerCase();
         final items = q.isEmpty
             ? all
@@ -163,11 +163,11 @@ class _HymnsViewState extends State<HymnsView> {
           padding: const EdgeInsets.all(16),
           children: [
             TextField(
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search by number, title or author'),
+              decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search songs by number, title or author'),
               onChanged: (v) => setState(() => _query = v.trim()),
             ),
             const SizedBox(height: 8),
-            if (items.isEmpty) const EmptyNote(icon: Icons.search_off, text: 'No hymns match your search.'),
+            if (items.isEmpty) const EmptyNote(icon: Icons.search_off, text: 'No songs match your search.'),
             for (final h in items)
               Card(
                 child: ListTile(
@@ -201,13 +201,13 @@ class HymnScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final api = context.read<Session>().api;
     return Scaffold(
-      appBar: AppBar(title: const Text('Hymn')),
+        appBar: AppBar(title: const Text('Church Song')),
       body: RemoteView(
         load: () => api.get('hymn', {'id': '$hymnId'}),
         builder: (context, data) {
           final h = Map<String, dynamic>.from(data['hymn'] as Map);
           final details = {
-            'Hymn book': h['hymn_book'],
+            'Song book': h['hymn_book'],
             'Language': h['language'],
             'Author / Translator': h['author'],
             'Tune / Metre': h['tune'],
