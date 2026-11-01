@@ -5,6 +5,7 @@ import '../core/format.dart';
 import '../core/session.dart';
 import '../core/theme.dart';
 import 'church_screen.dart';
+import 'collection_tools_screen.dart';
 import 'dashboard_screen.dart';
 import 'edit_profile_screen.dart';
 import 'giving_screen.dart';
@@ -156,6 +157,16 @@ class _Menu extends StatelessWidget {
                 Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
                 const SizedBox(height: 2),
                 Text('Member No. ${asText(m['member_no'])}', style: TextStyle(color: Colors.white.withValues(alpha: .85), fontSize: 13.5)),
+                if (asText(m['assigned_role']).isNotEmpty && asText(m['assigned_role']).toLowerCase() != 'member') ...[
+                  const SizedBox(height: 7),
+                  DecoratedBox(
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(20)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      child: Text(asText(m['assigned_role']), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -163,6 +174,11 @@ class _Menu extends StatelessWidget {
           item(Icons.home_outlined, 'Home', 0),
           heading('Giving'),
           for (final (i, t) in GivingScreen.tabs.indexed) item(t.icon, t.label, 1, i),
+          tile(ListTile(
+            leading: const Icon(Icons.assignment_outlined),
+            title: const Text('Role Tasks / Collections'),
+            onTap: () => run((context) => Navigator.push(context, MaterialPageRoute(builder: (_) => const CollectionToolsScreen()))),
+          )),
           heading('Worship'),
           item(Icons.list_alt_outlined, 'Order of Service', 2, 0),
           item(Icons.library_music_outlined, 'Hymns', 2, 1),

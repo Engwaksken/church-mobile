@@ -32,6 +32,7 @@ final updatedProfiles = <Map<String, dynamic>>[];
 
 /// Bodies sent to update_notification_settings, for assertions.
 final savedNotificationSettings = <Map<String, dynamic>>[];
+final recordedCollections = <Map<String, dynamic>>[];
 
 /// Whether the fake member has read their notifications.
 var notificationsRead = false;
@@ -107,6 +108,11 @@ http.Response fakeApi(http.Request request, {bool expireToken = false}) {
         return json(200, {'success': true});
       }(),
     'pledges' => json(200, {'success': true, 'items': <Object>[]}),
+    'role_tools' => json(200, {'success': true, 'items': <String>[], 'tools': <String, bool>{}}),
+    'record_collection' => () {
+      recordedCollections.add(jsonDecode(request.body) as Map<String, dynamic>);
+      return json(200, {'success': true, 'message': 'Collection recorded.'});
+    }(),
     'giving' => request.url.queryParameters['type'] == 'good_samaritan'
         ? json(200, {
             'success': true,
@@ -258,6 +264,19 @@ void main() {
     expect(find.text('Good Samaritan'), findsNothing);
     expect(find.text('My Giving'), findsOneWidget);
     expect(find.text('Contributions'), findsOneWidget);
+  });
+
+  testWidgets('role task page explains when collection permissions are not assigned', (tester) async {
+    final session = makeSession(savedToken: validToken);
+    await session.restore();
+    await tester.pumpWidget(MemberApp(session: session));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Menu'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Role Tasks / Collections'), 100, scrollable: find.descendant(of: find.byType(Drawer), matching: find.byType(Scrollable)));
+    await tester.tap(find.text('Role Tasks / Collections'));
+    await tester.pumpAndSettle();
+    expect(find.text('No collection tasks are assigned to your account. Ask a church administrator to assign the appropriate finance permission.'), findsOneWidget);
   });
 
   testWidgets('edits phone and email from the profile without zone data', (tester) async {
